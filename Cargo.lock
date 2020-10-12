@@ -83,6 +83,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "async-signals"
+version = "0.3.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f7bfd327d5b740fe22c1971fdef6c383d3d2e3f6191f8ff6e61b6b8aeaab6591"
+dependencies = [
+ "futures-util",
+ "lazy_static",
+ "nix",
+]
+
+[[package]]
 name = "async-std"
 version = "1.6.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -458,6 +469,19 @@ dependencies = [
 ]
 
 [[package]]
+name = "nix"
+version = "0.17.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "50e4785f2c3b7589a0d0c1dd60285e1188adac4006e8abd6dd578e1567027363"
+dependencies = [
+ "bitflags",
+ "cc",
+ "cfg-if",
+ "libc",
+ "void",
+]
+
+[[package]]
 name = "num-integer"
 version = "0.1.43"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -578,10 +602,12 @@ name = "rsinetd"
 version = "0.1.1"
 dependencies = [
  "anyhow",
+ "async-signals",
  "async-std",
  "clap",
  "daemonize",
  "futures",
+ "libc",
  "log",
  "once_cell",
  "simplelog",
@@ -673,6 +699,12 @@ name = "vec_map"
 version = "0.8.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "f1bddf1187be692e79c5ffeab891132dfb0f236ed36a43c7ed39f1165ee20191"
+
+[[package]]
+name = "void"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "6a02e4885ed3bc0f2de90ea6dd45ebcbb66dacffe03547fadbb0eeae2770887d"
 
 [[package]]
 name = "waker-fn"

@@ -31,7 +31,7 @@ fn daemonize() {
         .expect("Failed to start as daemon");
 }
 
-fn parse_rule() -> Result<Vec<Rule>> {
+pub fn parse_rule() -> Result<Vec<Rule>> {
     let conf: Vec<String> = config::open_conf_file()?
         .lines()
         .map(|s| s.trim())

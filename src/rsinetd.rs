@@ -1,4 +1,5 @@
 use anyhow::Result;
+use async_signals::Signals;
 use async_std::io;
 use async_std::net::TcpListener;
 use async_std::net::TcpStream;
@@ -7,11 +8,13 @@ use async_std::sync::Condvar;
 use async_std::sync::Mutex;
 use async_std::task;
 use futures::FutureExt;
+use log::error;
 use log::warn;
 use std::net::IpAddr;
 use std::net::SocketAddr;
+use std::sync::Arc;
 
-type ReloadLock = (Mutex<Option<Vec<Rule>>>, Condvar);
+type ReloadLock = Arc<(Mutex<Option<Vec<Rule>>>, Condvar)>;
 
 pub struct RsInetd {
     lock: ReloadLock,
@@ -19,19 +22,22 @@ pub struct RsInetd {
 
 impl RsInetd {
     pub fn new() -> RsInetd {
-        let lock = (Mutex::new(None), Condvar::new());
+        let lock = Arc::new((Mutex::new(None), Condvar::new()));
         RsInetd { lock }
     }
 
-    pub async fn run(&self, mut rules: Vec<Rule>) {
+    pub async fn run(self, mut rules: Vec<Rule>) {
+        task::spawn(sig_handler(self.lock.clone()));
         loop {
             let mut handlers = vec![];
             for rule in rules.iter() {
                 let handler = task::spawn(listen(rule.clone()));
                 handlers.push(handler);
             }
-            let (lock, cond) = &self.lock;
-            let r = cond.wait_until(lock.lock().await, |r| r.is_some()).await;
+            let (lock, cond) = &*self.lock;
+            let mut lock = lock.lock().await;
+            *lock = None;
+            let r = cond.wait_until(lock, |r| r.is_some()).await;
 
             for handler in handlers {
                 task::JoinHandle::cancel(handler).await;
@@ -42,12 +48,6 @@ impl RsInetd {
             }
         }
     }
-
-    pub async fn _reload(&self, rules: Vec<Rule>) {
-        let (lock, cond) = &self.lock;
-        *lock.lock().await = Some(rules);
-        cond.notify_one();
-    }
 }
 
 #[derive(Clone)]
@@ -56,6 +56,35 @@ pub struct Rule {
     pub lport: u16,
     pub target: String,
     pub tport: u16,
+}
+
+async fn sig_handler(lock: ReloadLock) {
+    let mut signals = match Signals::new(vec![libc::SIGHUP]) {
+        Ok(s) => s,
+        Err(e) => {
+            error!(target: "rsinetd", "{}", e);
+            return;
+        }
+    };
+
+    loop {
+        if let Some(libc::SIGHUP) = signals.next().await {
+            let rules = match crate::parse_rule() {
+                Ok(rules) => rules,
+                Err(e) => {
+                    warn!(target: "rsinetd", "Unable to reload configuration: {}", e);
+                    continue;
+                }
+            };
+            reload(&lock, rules).await;
+        }
+    }
+}
+
+async fn reload(lock: &ReloadLock, rules: Vec<Rule>) {
+    let (lock, cond) = &**lock;
+    *lock.lock().await = Some(rules);
+    cond.notify_one();
 }
 
 async fn listen(rule: Rule) {
