@@ -9,9 +9,11 @@ use std::fs::File;
 use std::io::Read;
 
 mod config;
+mod log;
 mod rsinetd;
 
 fn main() -> Result<()> {
+    log::init_logger();
     let rules = parse_rule()?;
     daemonize();
     let rsinetd = RsInetd::new();
