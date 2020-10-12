@@ -5,8 +5,6 @@ use anyhow::anyhow;
 use anyhow::Result;
 use async_std::task;
 use daemonize::Daemonize;
-use std::fs::File;
-use std::io::Read;
 
 mod config;
 mod log;
@@ -34,10 +32,7 @@ fn daemonize() {
 }
 
 fn parse_rule() -> Result<Vec<Rule>> {
-    let mut conf = File::open(&CONFIG.conf_file)?;
-    let mut content = String::new();
-    conf.read_to_string(&mut content)?;
-    let conf: Vec<String> = content
+    let conf: Vec<String> = config::open_conf_file()?
         .lines()
         .map(|s| s.trim())
         .filter(|s| !s.starts_with("#") && s.len() > 0)

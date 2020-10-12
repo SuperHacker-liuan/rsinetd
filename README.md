@@ -10,13 +10,27 @@ cargo install rsinetd
 
 ## How to use
 
-Usage of RsInetd is similiar to rinetd. The default configuration file is
-`/etc/rsinetd.conf`, current version we have only implemented socket to socket
+Usage of RsInetd is similiar to rinetd. We'll try to open the default configuration
+file in the following order.
+
+### Open order on unix
+
+1. `/etc/rsinetd.conf` 
+2. `./rsinetd.conf`
+3. `/etc/rinetd.conf`
+4. `./rinetd.conf`
+
+### Open order on non-unix
+
+1. `./rsinetd.conf`
+2. `./rinetd.conf`
+
+Current version we have only implemented socket to socket
 proxy, dns resolve haven't been implemented yet. For detail command line options,
 execute `rsinetd -h`.
 
 ```
-rsinetd 0.1.0
+rsinetd 0.1.1
 劉安 <liuan@sgcc.com.cn>
 A port proxy, replacement of rinetd. Because async-std use epoll rather than select, RsInetd may handle higher
 throughput than rinetd.

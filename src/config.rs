@@ -1,10 +1,15 @@
+use anyhow::anyhow;
+use anyhow::Result;
 use clap::App;
 use clap::Arg;
 use once_cell::sync::Lazy;
+use std::fs::File;
+use std::io::Read;
+use std::path::Path;
 use std::path::PathBuf;
 
 pub struct Config {
-    pub conf_file: PathBuf,
+    pub conf_file: Option<PathBuf>,
     pub daemon: bool,
 }
 
@@ -39,10 +44,37 @@ fn command_config() -> App<'static, 'static> {
 
 fn parse_config() -> Config {
     let matches = command_config().get_matches();
-    let conf_file = matches
-        .value_of("conf-file")
-        .unwrap_or("/etc/rsinetd.conf")
-        .into();
+    let conf_file = matches.value_of("conf-file").map(|r| r.into());
     let daemon = !matches.is_present("foreground");
     Config { conf_file, daemon }
+}
+
+#[cfg(unix)]
+const DEFAULT_CONF: &[&str] = &[
+    "/etc/rsinetd.conf",
+    "rsinetd.conf",
+    "/etc/rinetd.conf",
+    "rinetd.conf",
+];
+
+#[cfg(not(unix))]
+const DEFAULT_CONF: &[&str] = &["rsinetd.conf", "rinetd.conf"];
+
+pub fn open_conf_file() -> Result<String> {
+    if let Some(file) = &CONFIG.conf_file {
+        return read_file(&file);
+    }
+    for file in DEFAULT_CONF {
+        if let Ok(s) = read_file(file.as_ref()) {
+            return Ok(s);
+        }
+    }
+    Err(anyhow!("Default conf file not found: {:?}.", DEFAULT_CONF))
+}
+
+fn read_file(file: &Path) -> Result<String> {
+    let mut conf = File::open(file)?;
+    let mut content = String::new();
+    conf.read_to_string(&mut content)?;
+    Ok(content)
 }
