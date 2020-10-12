@@ -28,12 +28,13 @@ file in the following order.
 1. `./rsinetd.conf`
 2. `./rinetd.conf`
 
-Current version we have only implemented socket to socket
-proxy, dns resolve haven't been implemented yet. For detail command line options,
-execute `rsinetd -h`.
 
-```
-rsinetd 0.1.1
+## command line options
+
+```bash
+$ rsinetd -h
+
+rsinetd 0.2.0
 劉安 <liuan@sgcc.com.cn>
 A port proxy, replacement of rinetd. Because async-std use epoll rather than select, RsInetd may handle higher
 throughput than rinetd.
@@ -53,8 +54,9 @@ OPTIONS:
 ### Example of `/etc/rsinetd.conf`
 
 ```
-::      9999    192.168.1.1     80
+::          80      crates.io   80
+0.0.0.0     443     crates.io   443
 ```
 
-With this configuration file, rsinetd will listen on `[::]:9999` and forward the
-port access to `192.168.1.1:80`.
+With this configuration file, rsinetd will listen on `[::]:80` and forward the
+port access to `crates.io:80`, at the same time listenon `0.0.0.0:443` and forward the port access to `crates.io:443`

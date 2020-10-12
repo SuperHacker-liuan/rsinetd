@@ -1,7 +1,6 @@
 use self::config::CONFIG;
 use self::rsinetd::RsInetd;
-use self::rsinetd::Rule;
-use anyhow::anyhow;
+
 use anyhow::Result;
 use async_std::task;
 use daemonize::Daemonize;
@@ -9,10 +8,11 @@ use daemonize::Daemonize;
 mod config;
 mod log;
 mod rsinetd;
+mod rule;
 
 fn main() -> Result<()> {
     log::init_logger();
-    let rules = parse_rule()?;
+    let rules = rule::Rule::parse()?;
     daemonize();
     let rsinetd = RsInetd::new();
     task::block_on(rsinetd.run(rules));
@@ -29,28 +29,4 @@ fn daemonize() {
         .umask(0o777)
         .start()
         .expect("Failed to start as daemon");
-}
-
-pub fn parse_rule() -> Result<Vec<Rule>> {
-    let conf: Vec<String> = config::open_conf_file()?
-        .lines()
-        .map(|s| s.trim())
-        .filter(|s| !s.starts_with("#") && s.len() > 0)
-        .map(|s| s.into())
-        .collect();
-    let mut rules = vec![];
-    for line in conf {
-        let cols: Vec<&str> = line.split_whitespace().collect();
-        if cols.len() != 4 {
-            return Err(anyhow!("Syntax error in config file: {}", line));
-        }
-        let rule = Rule {
-            listen: cols[0].parse()?,
-            lport: cols[1].parse()?,
-            target: cols[2].into(),
-            tport: cols[3].parse()?,
-        };
-        rules.push(rule);
-    }
-    Ok(rules)
 }

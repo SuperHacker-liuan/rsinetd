@@ -1,16 +1,18 @@
+use crate::rule::Rule;
 use anyhow::Result;
 use async_signals::Signals;
 use async_std::io;
 use async_std::net::TcpListener;
 use async_std::net::TcpStream;
+use async_std::net::ToSocketAddrs;
 use async_std::stream::StreamExt;
 use async_std::sync::Condvar;
 use async_std::sync::Mutex;
 use async_std::task;
+use futures::future::select_all;
 use futures::FutureExt;
 use log::error;
 use log::warn;
-use std::net::IpAddr;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
@@ -50,14 +52,6 @@ impl RsInetd {
     }
 }
 
-#[derive(Clone)]
-pub struct Rule {
-    pub listen: IpAddr,
-    pub lport: u16,
-    pub target: String,
-    pub tport: u16,
-}
-
 async fn sig_handler(lock: ReloadLock) {
     let mut signals = match Signals::new(vec![libc::SIGHUP]) {
         Ok(s) => s,
@@ -69,7 +63,7 @@ async fn sig_handler(lock: ReloadLock) {
 
     loop {
         if let Some(libc::SIGHUP) = signals.next().await {
-            let rules = match crate::parse_rule() {
+            let rules = match Rule::parse() {
                 Ok(rules) => rules,
                 Err(e) => {
                     warn!(target: "rsinetd", "Unable to reload configuration: {}", e);
@@ -112,8 +106,12 @@ async fn tcp_stream(ls: TcpStream, target: String, tport: u16) {
 }
 
 async fn tcp_stream_impl(ls: TcpStream, target: String, tport: u16) -> Result<()> {
-    let target = SocketAddr::new(target.parse()?, tport);
-    let ts = TcpStream::connect(target).await?;
+    let targets = format!("{}:{}", target, tport)
+        .to_socket_addrs()
+        .await?
+        .map(|target| Box::pin(TcpStream::connect(target)));
+    let (ts, _, _) = select_all(targets).await;
+    let ts = ts?;
 
     // Sync
     let (lr, lw) = &mut (&ls, &ls);
