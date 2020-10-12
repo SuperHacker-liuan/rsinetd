@@ -4,7 +4,7 @@ version = "0.1.0"
 authors = ["劉安 <liuan@sgcc.com.cn>"]
 edition = "2018"
 license = "GPL-3.0"
-description = "A replacement of rinetd. Because async-std use epoll rather than select, RsInetd may handle higher throughput than rinetd."
+description = "A port proxy, replacement of rinetd. Because async-std use epoll rather than select, RsInetd may handle higher throughput than rinetd."
 documentation = "https://github.com/SuperHacker-liuan/rsinetd"
 homepage = "https://github.com/SuperHacker-liuan/rsinetd"
 repository = "https://github.com/SuperHacker-liuan/rsinetd"
@@ -18,7 +18,13 @@ keywords = ["rinetd", "proxy"]
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-async-std = "1.6.5"
+anyhow = "1.0.33"
+async-std = { version = "1.6.5", features = ["unstable"] }
+clap = "2.33.3"
+daemonize = "0.4.1"
+futures = "0.3.6"
+log = "0.4.11"
+once_cell = "1.4.1"
 
 [profile.release]
 opt-level = 3
