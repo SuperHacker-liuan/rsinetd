@@ -16,14 +16,14 @@ cargo install rsinetd
 Usage of RsInetd is similiar to rinetd. We'll try to open the default configuration
 file in the following order.
 
-### Open order on unix
+### Default conf's open order on unix
 
 1. `/etc/rsinetd.conf` 
 2. `./rsinetd.conf`
 3. `/etc/rinetd.conf`
 4. `./rinetd.conf`
 
-### Open order on non-unix
+### Default conf's open order on non-unix
 
 1. `./rsinetd.conf`
 2. `./rinetd.conf`
@@ -57,4 +57,4 @@ OPTIONS:
 ```
 
 With this configuration file, rsinetd will listen on `[::]:9999` and forward the
-port access to 192.168.1.1:80.
+port access to `192.168.1.1:80`.
