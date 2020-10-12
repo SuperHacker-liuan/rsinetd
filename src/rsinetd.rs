@@ -9,7 +9,7 @@ use async_std::stream::StreamExt;
 use async_std::sync::Condvar;
 use async_std::sync::Mutex;
 use async_std::task;
-use futures::future::select_all;
+use futures::future::select_ok;
 use futures::FutureExt;
 use log::error;
 use log::warn;
@@ -110,8 +110,7 @@ async fn tcp_stream_impl(ls: TcpStream, target: String, tport: u16) -> Result<()
         .to_socket_addrs()
         .await?
         .map(|target| Box::pin(TcpStream::connect(target)));
-    let (ts, _, _) = select_all(targets).await;
-    let ts = ts?;
+    let (ts, _) = select_ok(targets).await?;
 
     // Sync
     let (lr, lw) = &mut (&ls, &ls);
