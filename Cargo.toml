@@ -22,7 +22,6 @@ keywords = ["rinetd", "proxy"]
 anyhow = "1.0.33"
 async-std = { version = "1.6.5", features = ["unstable"] }
 clap = "2.33.3"
-daemonize = "0.4.1"
 futures = "0.3.6"
 log = "0.4.11"
 once_cell = "1.4.1"
@@ -30,6 +29,7 @@ simplelog = "0.8.0"
 
 [target.'cfg(unix)'.dependencies]
 async-signals = "0.3.1"
+daemonize = "0.4.1"
 libc = "0.2.79"
 
 [profile.release]

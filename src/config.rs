@@ -3,6 +3,7 @@ use anyhow::Result;
 use clap::App;
 use clap::Arg;
 use once_cell::sync::Lazy;
+use once_cell::sync::OnceCell;
 use std::fs::File;
 use std::io::Read;
 use std::path::Path;
@@ -16,7 +17,7 @@ pub struct Config {
 pub static CONFIG: Lazy<Config> = Lazy::new(parse_config);
 
 fn command_config() -> App<'static, 'static> {
-    App::new("RsInetd: A replacement of rinetd")
+    let mut app = App::new("RsInetd: A replacement of rinetd")
         .name(clap::crate_name!())
         .version(clap::crate_version!())
         .author(clap::crate_authors!())
@@ -30,8 +31,9 @@ fn command_config() -> App<'static, 'static> {
                 .takes_value(true)
                 .multiple(false)
                 .required(false),
-        )
-        .arg(
+        );
+    if cfg!(unix) {
+        app = app.arg(
             Arg::with_name("foreground")
                 .short("f")
                 .long("foreground")
@@ -39,7 +41,9 @@ fn command_config() -> App<'static, 'static> {
                 .takes_value(false)
                 .multiple(false)
                 .required(false),
-        )
+        );
+    }
+    app
 }
 
 fn parse_config() -> Config {
@@ -59,8 +63,12 @@ const DEFAULT_CONF: &[&str] = &[
 
 #[cfg(not(unix))]
 const DEFAULT_CONF: &[&str] = &["rsinetd.conf", "rinetd.conf"];
+static USE_CONF: OnceCell<PathBuf> = OnceCell::new();
 
 pub fn open_conf_file() -> Result<String> {
+    if let Some(file) = USE_CONF.get() {
+        return read_file(file);
+    }
     if let Some(file) = &CONFIG.conf_file {
         return read_file(&file);
     }
@@ -76,5 +84,8 @@ fn read_file(file: &Path) -> Result<String> {
     let mut conf = File::open(file)?;
     let mut content = String::new();
     conf.read_to_string(&mut content)?;
+
+    let file = file.canonicalize()?;
+    USE_CONF.get_or_init(|| file);
     Ok(content)
 }
