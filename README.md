@@ -1,5 +1,6 @@
 # RsInetd
 
+[![Crates.io](https://img.shields.io/crates/v/rsinetd)](https://crates.io/crates/rsinetd)
 [![Build Status](https://travis-ci.org/SuperHacker-liuan/rsinetd.svg?branch=master)](https://travis-ci.org/SuperHacker-liuan/rsinetd)
 [![GitHub license](https://img.shields.io/github/license/SuperHacker-liuan/rsinetd)](https://github.com/SuperHacker-liuan/rsinetd/blob/master/LICENSE)
 
