@@ -35,7 +35,7 @@ file in the following order.
 $ rsinetd -h
 
 rsinetd 0.2.0
-劉安 <liuan@sgcc.com.cn>
+
 A port proxy, replacement of rinetd. Because async-std use epoll rather than select, RsInetd may handle higher
 throughput than rinetd.
 
